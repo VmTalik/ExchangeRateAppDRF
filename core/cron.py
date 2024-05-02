@@ -14,13 +14,17 @@ def fetch_exchange_rate():
         print('Ошибка запроса', err)
 
     l = []
-    date = response.json()['Timestamp'].split('T1')[0]
+    date = response.json()['Timestamp'].split('T')[0]
     valutes = response.json()['Valute']
     for valute in valutes:
         l.append({"charcode": valute, "date": date, "rate": valutes[valute]["Value"]})
     json_data = json.dumps(l)
 
     try:
-        requests.post('http://localhost:8000/rate/', headers={'Content-Type': 'application/json'}, data=json_data)
-    except requests.RequestException as err:
-        print('Ошибка при отправлении данных\n', err)
+        rs = requests.post('http://localhost:8000/rate/', headers={'Content-Type': 'application/json'}, data=json_data)
+        if not rs.ok:
+            print(f'---{date}--- BAD STATUS CODE: {rs.status_code}')
+    except requests.ConnectionError as e:
+        print('Ошибка подключения:', e)
+    except requests.Timeout as e:
+        print('Ошибка таймаута:', e)
